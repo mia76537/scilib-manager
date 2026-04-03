@@ -1,0 +1,1 @@
+com.scimanager.core.tool包用于暂存不便/难以定义用途的工具类

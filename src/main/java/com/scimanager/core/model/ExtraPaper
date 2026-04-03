@@ -1,0 +1,21 @@
+/**
+ // --- 核心元数据 ---
+    private String title;          // 题目
+    private String authors;        // 作者（GB标准要求前三位作者，超过三位加“等”或“et al.”）
+    private String journal;        // 刊名/报纸名/专著题名
+    private Integer pubYear;       // 出版年
+    private String volume;         // 卷号
+    private String issue;          // 期号
+    private String pages;          // 起讫页码 (如 101-120)
+
+    // --- GB/T 7714 特有字段 ---
+    /** * 文献类型标识：
+     * [J] 期刊, [M] 普通图书, [C] 会议录, [D] 学位论文, [R] 报告, [EB/OL] 电子公告 
+     
+    private String docType;        
+
+    private String publisher;      // 出版地与出版者（专著、学位论文、报告需要）
+    private String doi;            // DOI（电子资源必须，普通纸质资源可选）
+    private String url;            // 引用网址（[EB/OL] 类型必须）
+    private LocalDate accessDate;  // 引用日期（电子资源必须）
+    */
