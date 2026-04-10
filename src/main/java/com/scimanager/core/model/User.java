@@ -32,7 +32,7 @@ public class User {
 	// --- 关联关系 ---
 	// 一个用户对应多篇论文
 	@JsonIgnore
-	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Paper> papers;
 
 	// 一个用户可提交多个查收查引请求

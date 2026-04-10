@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.scimanager.core.model.Paper;
@@ -36,21 +38,16 @@ public class PaperServiceImpl implements PaperService {
 	public Paper uploadPaper(MultipartFile file, String userId) {
 		// 1. 获取用户信息
 		User owner = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));
-
 		// 2. 物理保存文件
 		String storedPath = storageService.upload(file);
-
 		// 3. 创建数据库记录
 		Paper paper = new Paper();
 		paper.setPaperName(file.getOriginalFilename());
 		paper.setLocalPath(storedPath);
 		paper.setOwner(owner);
-
 		Paper savedPaper = paperRepository.save(paper);
-
-		// 调用外部 Service 的异步方法，Spring 代理才会生效
+		// 调用外部 Service 的异步方法
 		String absolutePath = storageService.getAbsolutePath(savedPaper.getLocalPath());
-		System.out.println("添加了，准备make");
 		citationInternalService.processMetadataAsync(savedPaper.getId(), absolutePath, paperRepository, userId);
 
 		return savedPaper;
@@ -61,10 +58,23 @@ public class PaperServiceImpl implements PaperService {
 	public void deletePaper(Long paperId, String userId) {
 		Paper paper = paperRepository.findByIdAndOwner_UserId(paperId, userId)
 				.orElseThrow(() -> new RuntimeException("文件不存在或无权操作"));
+
 		storageService.delete(paper.getLocalPath());
 		paperRepository.delete(paper);
-		System.out.println("删除了，准备make");
-		userInterestsService.makeUserInterestProfile(userId);
+
+		// 关键：注册一个同步钩子，只有当事务成功 commit 后才执行
+		if (TransactionSynchronizationManager.isActualTransactionActive()) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCommit() {
+					// 此时数据库已经删除了，再去叫 AI 跑任务
+					userInterestsService.makeUserInterestProfile(userId);
+				}
+			});
+		} else {
+			// 如果当前没事务，直接调用
+			userInterestsService.makeUserInterestProfile(userId);
+		}
 	}
 
 	@Override

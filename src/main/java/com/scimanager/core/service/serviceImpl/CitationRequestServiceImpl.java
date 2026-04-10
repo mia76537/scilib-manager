@@ -88,10 +88,8 @@ public class CitationRequestServiceImpl implements CitationRequestService {
 	public List<CitationRequest> findRequestsByCondition(RequestStatus status, String serialNumber, String requesterId,
 			String userId) {
 		boolean isAdmin = isAdmin(userId);
-
-		// 如果是管理员，通过传入的 requesterId 筛选，否则强制限制为当前用户 ID
+		// 权限控制：如果是管理员，通过传入的 requesterId 筛选，否则强制限制为当前用户 ID
 		String targetUserId = isAdmin ? requesterId : userId;
-
 		return requestRepository.findWithConditions(status, serialNumber, targetUserId);
 	}
 

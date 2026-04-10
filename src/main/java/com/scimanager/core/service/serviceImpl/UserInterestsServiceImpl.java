@@ -35,7 +35,7 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 	private final OkHttpClient httpClient = new OkHttpClient.Builder()
 			.connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS) // 连接超时
 			.writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS) // 写入超时
-			.readTimeout(60, java.util.concurrent.TimeUnit.SECONDS) // 读取超时（重点设置这里）
+			.readTimeout(60, java.util.concurrent.TimeUnit.SECONDS) // 读取超时
 			.build();
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -44,8 +44,11 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 	private static final String API_URL = "https://api.deepseek.com/chat/completions";
 
 	@Async
+	@Override
 	@Transactional
 	public void makeUserInterestProfile(String userId) {
+		System.out.printf("开始强制生成用户画像，用户ID: %s\n", userId);
+
 		System.out.printf("开始make");
 		// 1. 获取用户信息及当前论文总数
 		User user = userRepository.findById(userId).orElseThrow();
@@ -60,6 +63,7 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 			// 提取关键词并调用 AI
 			List<String> allKeywords = user.getPapers().stream().flatMap(paper -> paper.getKeyWords().stream())
 					.collect(Collectors.toList());
+			System.out.printf("关键词是" + allKeywords);
 			System.out.printf("提取关键词并调用 AI了");
 
 			try {
@@ -92,17 +96,16 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 	 */
 	public String analyzeUserInterests(List<String> allKeywords) throws Exception {
 		if (allKeywords == null || allKeywords.isEmpty()) {
+			System.out.printf("没有关键词了");
 			return "暂无足够数据分析用户兴趣。";
 		}
-
-		// 1. 统计原始词频 (e.g., {"Java": 5, "Spring": 3...})
+		// 1.统计原始词频
 		Map<String, Long> wordCounts = allKeywords.stream()
 				.collect(Collectors.groupingBy(s -> s.trim().toLowerCase(), Collectors.counting()));
-
+		System.out.printf("关键词是" + wordCounts);
 		// 2. 构建发送给 AI 的上下文
 		StringBuilder context = new StringBuilder();
 		wordCounts.forEach((word, count) -> context.append(word).append("(").append(count).append("次); "));
-
 		String prompt = """
 				你是一个学术导师助手。以下是一个科研人员最近研究论文的关键词及其出现频次统计：
 				---
@@ -123,9 +126,7 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 
 				    **只输出 JSON，不要任何开场白或 Markdown 代码块标记（如 ```json）,使用英文半角符号与空格。**
 				""".formatted(context.toString());
-
 		String systemPrompt = "你是一个精通学术大数据分析的专家，擅长通过关键词勾勒研究者画像。";
-
 		// 调用 callDeepSeek 方法
 		return callDeepSeek(systemPrompt, prompt);
 	}

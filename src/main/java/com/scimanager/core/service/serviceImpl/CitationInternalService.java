@@ -112,7 +112,7 @@ public class CitationInternalService {
 	}
 
 	/**
-	 * 4. 核心：封装 API 调用逻辑 (OkHttp + Jackson)
+	 * 4. 封装 API 调用逻辑 (OkHttp + Jackson)
 	 */
 	private String callDeepSeek(String systemContent, String userContent) throws Exception {
 		String jsonBody = objectMapper.createObjectNode().put("model", "deepseek-chat").put("temperature", 0.0) // 核心：设为
@@ -142,13 +142,11 @@ public class CitationInternalService {
 		// 匹配引文核心和编号 (支持 [1] 格式)
 		Pattern pattern = Pattern.compile("(\\[\\d+\\])?\\s*([^。\\n]+?\\\\[[A-Z/]+\\\\][^。\\n]+?\\\\d{4}.+)");
 		Matcher matcher = pattern.matcher(aiResponse);
-
 		if (!matcher.find())
 			return aiResponse; // 若匹配失败则返回原文
 
 		String refNum = matcher.group(1) != null ? matcher.group(1) : "";
 		String citation = matcher.group(2).trim();
-
 		// 标点标准化与紧凑化 (全角 -> 半角)
 		citation = citation.replace("，", ",").replace("：", ":").replace("。", ".").replace("；", ";").replace("（", "(")
 				.replace("）", ")");
@@ -163,16 +161,15 @@ public class CitationInternalService {
 	@Async
 	public void processMetadataAsync(Long paperId, String pdfPath, PaperRepository repository, String paperOwnerId) {
 		try (PDDocument document = PDDocument.load(new File(pdfPath))) {
-			String text = extractPdfText(pdfPath); // 解析 PDF
-			String citation = getAiCitation(text); // 调 AI
-			List<String> keywords = getKeywordsFromAi(text); // 提关键词
-
-			// 回写数据库
+			String text = extractPdfText(pdfPath); // 1. 提取PDF文本内容
+			String citation = getAiCitation(text); // 2. 调用 AI 大模型
+			List<String> keywords = getKeywordsFromAi(text); // 3. 提取关键词
+			// 4. 将AI解析结果持久化至数据库
 			repository.findById(paperId).ifPresent(paper -> {
 				paper.setPaperCitation(citation);
 				paper.setKeyWords(keywords);
 				repository.save(paper);
-				System.out.println("关键词生成完了，准备make");
+				// 5. 更新用户科研可视化图像
 				userInterestsService.makeUserInterestProfile(paperOwnerId);
 			});
 		} catch (Exception e) {

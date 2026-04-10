@@ -19,5 +19,5 @@ public class UserInterest {
 	private String analysisResult; // 存储 AI 返回的表格或 JSON 字符串
 
 	private LocalDateTime lastUpdateTime; // 记录上次分析时间
-	private Integer paperCountSnapshot; // 记录分析时的论文总数，用于判断是否需要更新
+	private Integer paperCountSnapshot; // 记录分析时的论文总数
 }
