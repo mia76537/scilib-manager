@@ -1,15 +1,17 @@
 package com.scimanager.core.tool;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.stereotype.Component;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class JwtUtils {
@@ -18,7 +20,7 @@ public class JwtUtils {
 	private static final String SECRET_STR = "your_super_secret_key_for_scimanager_system_2024";
 	private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STR.getBytes());
 
-	// 过期时间：例如 30 分钟 (毫秒计算)
+	// 过期时间： 30 分钟 (毫秒计算)
 	private static final long EXPIRATION_TIME = 30 * 60 * 1000;
 
 	/**

@@ -3,7 +3,7 @@ package com.scimanager.core.service;
 import java.util.List;
 
 import com.scimanager.core.model.CitationRequest;
-import com.scimanager.core.model.dto.CreateCitationRequestDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CreateCitationRequestDTO;
 
 public interface CitationRequestService {
 	// 创建查收查引请求

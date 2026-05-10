@@ -1,4 +1,4 @@
-package com.scimanager.core.model.dto;
+package com.scimanager.core.model.dto.citationrequesdto;
 
 import java.util.List;
 

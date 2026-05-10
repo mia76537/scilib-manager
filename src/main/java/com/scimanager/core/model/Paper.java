@@ -32,7 +32,14 @@ public class Paper {
 	// --- 文件属性 ---
 	private String localPath; // 文件路径
 	@Column(columnDefinition = "TEXT")
-	private String paperAbstract; // 摘要
+
+	// 文献元数据
+	private String paperAuthors;// 作者
+	private String paperTitle;// 论文标题
+	private String paperSourcePublications;// 来源出版物
+	private String paperPublicationYear;// 出版年
+	private String paperDoi;// DOI号
+	private String paperAccessionNumber;// 入藏号
 	private String paperCitation; // 存储 GB/T 7714 格式引文
 
 	// --- 归属与管理 ---

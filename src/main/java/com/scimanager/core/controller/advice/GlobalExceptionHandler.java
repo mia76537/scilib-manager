@@ -10,8 +10,8 @@ import com.scimanager.core.common.Result;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * 全局异常处理器 (Global Exception Handler) * 作用： 1. 统一捕获后端抛出的各类异常，避免将原始堆栈信息暴露给前端。 2.
- * 将业务逻辑中的错误映射为标准的 RESTful HTTP 状态码。 3. 统一返回格式为 Result 包装对象。
+ * 全局异常处理器 (Global Exception Handler) * 统一捕获后端抛出的各类异常，避免将原始堆栈信息暴露给前端。
+ * 将业务逻辑中的错误映射为标准的 RESTful HTTP 状态码。 统一返回格式为 Result 包装对象。
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,7 +33,6 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Result<String>> handleException(Exception e) {
 		// 在控制台打印详细堆栈
 		e.printStackTrace();
-
 		// 返回 500 Internal Server Error
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Result.error(500, "系统内部故障，请联系管理员"));
 	}

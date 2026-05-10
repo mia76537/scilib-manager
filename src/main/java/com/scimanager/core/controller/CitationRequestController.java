@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.scimanager.core.common.Result;
 import com.scimanager.core.model.CitationRequest;
-import com.scimanager.core.model.dto.CitationRequestDetailDTO;
-import com.scimanager.core.model.dto.CitationRequestSummaryDTO;
-import com.scimanager.core.model.dto.CreateCitationRequestDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationRequestDetailDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationRequestSummaryDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CreateCitationRequestDTO;
 import com.scimanager.core.service.CitationRequestService;
 import com.scimanager.core.service.mapper.CitationMapper;
 

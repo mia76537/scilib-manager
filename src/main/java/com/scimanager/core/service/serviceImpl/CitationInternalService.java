@@ -42,7 +42,19 @@ public class CitationInternalService {
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	/**
-	 * 1. 提取 PDF 内容 (前十页，限 10000 字)
+	 * 辅助方法：将 JsonNode 中的数据映射到 Paper 实体类
+	 */
+	private void mapJsonToPaper(JsonNode node, com.scimanager.core.model.Paper paper) {
+		// 使用 path().asText(null) 确保字段缺失时返回 null 而不抛出异常
+		paper.setPaperTitle(node.path("title").asText(null));
+		paper.setPaperAuthors(node.path("authors").asText(null));
+		paper.setPaperSourcePublications(node.path("source").asText(null));
+		paper.setPaperPublicationYear(node.path("year").asText(null));
+		paper.setPaperDoi(node.path("doi").asText(null));
+	}
+
+	/**
+	 * 提取 PDF 内容 (前十页，限 10000 字)
 	 */
 	public String extractPdfText(String filePath) throws IOException {
 		try (PDDocument document = PDDocument.load(new File(filePath))) {
@@ -86,7 +98,7 @@ public class CitationInternalService {
 	}
 
 	/**
-	 * 3. 提取论文关键词 (新增功能)
+	 * 3. 提取论文关键词
 	 */
 	public List<String> getKeywordsFromAi(String paperText) throws Exception {
 		String prompt = """
@@ -109,6 +121,54 @@ public class CitationInternalService {
 
 		// 将 AI 返回的字符串按中文逗号或英文逗号分割成列表
 		return Arrays.asList(rawResponse.replace(" ", "").split("[,，]"));
+	}
+
+	/**
+	 * 从论文文本中提取元数据并填充到 Paper 实体类
+	 */
+	public void extractAndPopulateMetadata(String paperText, com.scimanager.core.model.Paper paper) throws Exception {
+		String prompt = """
+				你是一个学术元数据提取专家。请从给定的论文文本中提取以下字段，并以严格的 JSON 格式输出。
+
+				字段说明：
+				1. title: 论文标题
+				2. authors: 作者列表，多人用逗号分隔
+				3. source: 来源期刊或会议名称
+				4. year: 出版年份 (仅数字)
+				5. doi: DOI号 (如有)
+				6. abstract: 论文摘要 (尽可能提取完整)
+
+				任务要求：
+				- 如果某个字段无法识别，请填入 null。
+				- 只输出 JSON 代码块，不要有任何解释文字。
+				- JSON 格式必须合法。
+
+				论文文本：
+				---
+				%s
+				---
+				""".formatted(paperText);
+
+		String systemPrompt = "你是一个专门负责解析学术论文元数据的机器人。你只输出 JSON。";
+
+		String rawJson = callDeepSeek(systemPrompt, prompt);
+
+		try {
+			// 尝试 1：直接解析 AI 返回的内容
+			JsonNode node = objectMapper.readTree(rawJson);
+			mapJsonToPaper(node, paper);
+		} catch (Exception e) {
+			// 尝试 2：如果失败，清洗 Markdown 标签 (```json ... ```)
+			String cleanedJson = rawJson.replaceAll("(?s)```json|```", "").trim();
+			try {
+				JsonNode node = objectMapper.readTree(cleanedJson);
+				mapJsonToPaper(node, paper);
+			} catch (Exception secondEx) {
+				// 彻底失败：记录日志并抛出异常
+				System.err.println("解析 AI 返回的 JSON 失败。原始文本: " + rawJson);
+				throw new RuntimeException("无法解析论文元数据 JSON 格式", secondEx);
+			}
+		}
 	}
 
 	/**
@@ -160,20 +220,30 @@ public class CitationInternalService {
 
 	@Async
 	public void processMetadataAsync(Long paperId, String pdfPath, PaperRepository repository, String paperOwnerId) {
-		try (PDDocument document = PDDocument.load(new File(pdfPath))) {
-			String text = extractPdfText(pdfPath); // 1. 提取PDF文本内容
-			String citation = getAiCitation(text); // 2. 调用 AI 大模型
-			List<String> keywords = getKeywordsFromAi(text); // 3. 提取关键词
-			// 4. 将AI解析结果持久化至数据库
+		try {
+			String text = extractPdfText(pdfPath);
+
 			repository.findById(paperId).ifPresent(paper -> {
-				paper.setPaperCitation(citation);
-				paper.setKeyWords(keywords);
-				repository.save(paper);
-				// 5. 更新用户科研可视化图像
-				userInterestsService.makeUserInterestProfile(paperOwnerId);
+				try {
+					// 1. 提取并封装基础元数据 (标题、作者、摘要等)
+					extractAndPopulateMetadata(text, paper);
+					// 2. 提取 GB/T 7714 引文
+					String citation = getAiCitation(text);
+					paper.setPaperCitation(citation);
+					// 3. 提取关键词
+					List<String> keywords = getKeywordsFromAi(text);
+					paper.setKeyWords(keywords);
+					// 持久化所有更新
+					repository.save(paper);
+					// 更新用户画像
+					userInterestsService.makeUserInterestProfile(paperOwnerId);
+				} catch (Exception e) {
+					System.err.println("解析论文 ID " + paperId + " 时出错: " + e.getMessage());
+				}
 			});
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+
 }

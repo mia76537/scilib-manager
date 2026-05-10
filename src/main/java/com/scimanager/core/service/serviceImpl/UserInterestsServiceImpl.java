@@ -47,29 +47,18 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 	@Override
 	@Transactional
 	public void makeUserInterestProfile(String userId) {
-		System.out.printf("开始强制生成用户画像，用户ID: %s\n", userId);
-
-		System.out.printf("开始make");
-		// 1. 获取用户信息及当前论文总数
+		// 获取用户信息
 		User user = userRepository.findById(userId).orElseThrow();
 		int currentPaperCount = user.getPapers().size();
-		System.out.printf("获取用户信息及当前论文总数了");
-
-		// 2. 检查缓存记录
+		// 检查缓存记录
 		UserInterest cachedInterest = userInterestRepository.findById(userId).orElse(null);
-		System.out.printf("检查缓存记录了");
 		{
-
 			// 提取关键词并调用 AI
 			List<String> allKeywords = user.getPapers().stream().flatMap(paper -> paper.getKeyWords().stream())
 					.collect(Collectors.toList());
-			System.out.printf("关键词是" + allKeywords);
-			System.out.printf("提取关键词并调用 AI了");
-
 			try {
 				String newAnalysis = this.analyzeUserInterests(allKeywords);
-				System.out.println("AI 分析结果成功获取: " + newAnalysis);
-				// 4. 更新或创建缓存记录
+				// 更新或创建缓存记录
 				if (cachedInterest == null) {
 					cachedInterest = new UserInterest();
 					cachedInterest.setUserId(userId);
@@ -77,26 +66,23 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 				cachedInterest.setAnalysisResult(newAnalysis);
 				cachedInterest.setPaperCountSnapshot(currentPaperCount);
 				cachedInterest.setLastUpdateTime(LocalDateTime.now());
-
 				userInterestRepository.save(cachedInterest);
-
 			} catch (Exception e) {
 				System.err.println("！！！AI分析环节出错！！！");
-				e.printStackTrace(); // 打印具体的错误堆栈，比如是不是网络断了？
+				e.printStackTrace(); // 打印具体的错误堆栈
 
 			}
 		}
 	}
 
 	/**
-	 * 分析用户的研究兴趣画像
+	 * 分析用户的研究
 	 * 
 	 * @param allKeywords 用户所有论文关键词的扁平化列表
 	 * @return AI 生成的兴趣权重报告（JSON）
 	 */
 	public String analyzeUserInterests(List<String> allKeywords) throws Exception {
 		if (allKeywords == null || allKeywords.isEmpty()) {
-			System.out.printf("没有关键词了");
 			return "暂无足够数据分析用户兴趣。";
 		}
 		// 1.统计原始词频
@@ -132,9 +118,7 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 	}
 
 	private String callDeepSeek(String systemContent, String userContent) throws Exception {
-		String jsonBody = objectMapper.createObjectNode().put("model", "deepseek-chat").put("temperature", 0.0) // 核心：设为
-																												// 0
-																												// 以获得最稳定的结果
+		String jsonBody = objectMapper.createObjectNode().put("model", "deepseek-chat").put("temperature", 0.0)
 				.set("messages", objectMapper.createArrayNode()
 						.add(objectMapper.createObjectNode().put("role", "system").put("content", systemContent))
 						.add(objectMapper.createObjectNode().put("role", "user").put("content", userContent)))
@@ -155,6 +139,7 @@ public class UserInterestsServiceImpl implements UserInterestsService {
 	@Override
 	public String getUserInterestProfile(String userId) {
 		return userInterestRepository.findById(userId).map(UserInterest::getAnalysisResult) // 如果存在记录，返回结果
-				.orElse("您的科研画像正在生成中，请稍后刷新查看..."); // 如果不存在，返回友好提示
+				.orElse("您的科研可视化图像正在生成中，请稍后刷新查看..."); // 如果不存在，返回友好提示
 	}
+
 }

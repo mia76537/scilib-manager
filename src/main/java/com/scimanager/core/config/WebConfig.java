@@ -18,7 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
 	public void addInterceptors(InterceptorRegistry registry) {
 		// 设置拦截路径
 		registry.addInterceptor(jwtInterceptor)
-				.addPathPatterns("/api/papers/**", "/api/users/**", "/api/citation-requests/**")
+				.addPathPatterns("/api/papers/**", "/api/users/**", "/api/citation-requests/**", "/api/profile/**")
 				.excludePathPatterns("/api/users/login");
 	}
 

@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.scimanager.core.model.CitationRequest;
-import com.scimanager.core.model.CitationRequest.RequestStatus;
 import com.scimanager.core.model.User;
-import com.scimanager.core.model.dto.CreateCitationRequestDTO;
+import com.scimanager.core.model.CitationRequest.RequestStatus;
+import com.scimanager.core.model.dto.citationrequesdto.CreateCitationRequestDTO;
 import com.scimanager.core.repository.CitationRequestRepository;
 import com.scimanager.core.repository.UserRepository;
 import com.scimanager.core.service.CitationRequestService;

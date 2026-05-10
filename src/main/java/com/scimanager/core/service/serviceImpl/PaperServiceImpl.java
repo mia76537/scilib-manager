@@ -88,13 +88,23 @@ public class PaperServiceImpl implements PaperService {
 	}
 
 	@Override
+	public List<Paper> listAllPapersForAdmin() {
+		return paperRepository.findAll();
+	}
+
+	@Override
+	public List<Paper> listPapersByUserForAdmin(String targetUserId) {
+		// 这里直接查询目标用户 ID，不校验当前操作者 ID
+		return paperRepository.findByOwner_UserId(targetUserId);
+	}
+
+	@Override
 	@Transactional
 	public Paper updatePaperMetadata(Paper updateData, String userId) {
 		Paper existingPaper = paperRepository.findByIdAndOwner_UserId(updateData.getId(), userId)
 				.orElseThrow(() -> new RuntimeException("文件不存在或无权操作"));
 
 		existingPaper.setPaperName(updateData.getPaperName());
-		existingPaper.setPaperAbstract(updateData.getPaperAbstract());
 		existingPaper.setKeyWords(updateData.getKeyWords());
 
 		// 如果前端也手动修改了引文，也可以在这里更新

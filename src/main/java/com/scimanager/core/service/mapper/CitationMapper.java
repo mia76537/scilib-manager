@@ -11,11 +11,11 @@ import com.scimanager.core.model.CitationCriteria;
 import com.scimanager.core.model.CitationItem;
 import com.scimanager.core.model.CitationRequest;
 import com.scimanager.core.model.User;
-import com.scimanager.core.model.dto.CitationCriteriaDTO;
-import com.scimanager.core.model.dto.CitationItemDTO;
-import com.scimanager.core.model.dto.CitationRequestDetailDTO;
-import com.scimanager.core.model.dto.CitationRequestSummaryDTO;
-import com.scimanager.core.model.dto.CreateCitationRequestDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationCriteriaDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationItemDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationRequestDetailDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationRequestSummaryDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CreateCitationRequestDTO;
 
 @Mapper(componentModel = "spring")
 public interface CitationMapper {
@@ -45,8 +45,9 @@ public interface CitationMapper {
 	CitationRequest toEntity(CreateCitationRequestDTO dto, User user, String sn, LocalDateTime now);
 
 	// 将前端传入的“查询标准”传输对象转换为数据库实体
+	@Mapping(target = "id", ignore = true)
 	CitationCriteria toCriteriaEntity(CitationCriteriaDTO dto);
 
-	// 将前端传入的“论文条目”DTO 列表批量转换为实体列表。
+	// 将前端传入的“论文条目”列表批量转换为实体列表。
 	List<CitationItem> toItemEntityList(List<CitationItemDTO> dtos);
 }
