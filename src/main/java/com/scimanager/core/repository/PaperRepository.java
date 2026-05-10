@@ -35,8 +35,9 @@ public interface PaperRepository extends JpaRepository<Paper, Long> {
 	List<Paper> findByOwner_UserNameContainingAndOwner_MentorId(String studentName, String mentorId);
 
 	// 搜索：按文献关键词查询，且限定在导师名下
-	@Query("SELECT p FROM Paper p WHERE (p.paperName LIKE %:keyword% OR p.keyWords LIKE %:keyword%) "
-			+ "AND p.owner.mentorId = :mentorId")
+	// 使用 LEFT JOIN p.keyWords k 将集合展开，并使用 DISTINCT 避免因匹配到多个关键词而产生重复结果
+	@Query("SELECT DISTINCT p FROM Paper p LEFT JOIN p.keyWords k "
+			+ "WHERE (p.paperName LIKE %:keyword% OR k LIKE %:keyword%) " + "AND p.owner.mentorId = :mentorId")
 	List<Paper> searchMentorStudentsPapersByKeyword(@Param("keyword") String keyword,
 			@Param("mentorId") String mentorId);
 }

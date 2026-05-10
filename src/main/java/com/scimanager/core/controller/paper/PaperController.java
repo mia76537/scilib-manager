@@ -105,10 +105,17 @@ public class PaperController {
 	@GetMapping("/mentor/search/keyword")
 	public Result<List<Paper>> searchStudentsPapersByKeyword(@RequestParam String keyword,
 			@RequestAttribute("userId") String mentorId, @RequestAttribute("role") String role) {
-		if (!"MENTOR".equals(role)) {
-			return Result.error(403, "权限不足");
+		try {
+			if (!"MENTOR".equals(role)) {
+				return Result.error(403, "权限不足");
+			}
+			System.out.println("开始执行数据库查询: " + keyword);
+			List<Paper> result = paperService.searchMentorStudentsPapersByKeyword(keyword, mentorId);
+			return Result.success(result);
+		} catch (Exception e) {
+			e.printStackTrace(); // 这行非常重要，它会在 IDEA 控制台打印出真正的错误原因
+			return Result.error(400, "后端执行出错: " + e.getMessage());
 		}
-		return Result.success(paperService.searchMentorStudentsPapersByKeyword(keyword, mentorId));
 	}
 
 	/**
@@ -117,6 +124,7 @@ public class PaperController {
 	@GetMapping("/mentor/search/student")
 	public Result<List<Paper>> searchStudentsPapersByStudentName(@RequestParam String studentName,
 			@RequestAttribute("userId") String mentorId, @RequestAttribute("role") String role) {
+		System.out.println("收到请求了！");
 		if (!"MENTOR".equals(role)) {
 			return Result.error(403, "权限不足");
 		}
