@@ -48,6 +48,11 @@ public interface PaperService {
 	List<Paper> listPapersByUserForAdmin(String targetUserId);
 
 	/**
+	 * 导师：根据导师 ID 查询该导师名下所有学生上传的文献
+	 */
+	List<Paper> listMentorStudentsPapers(String mentorId);
+
+	/**
 	 * 获取当前用户的所有文献列表
 	 * 
 	 * @param userId 当前用户ID
@@ -63,4 +68,8 @@ public interface PaperService {
 	 * @return 更新后的实体
 	 */
 	Paper updatePaperMetadata(Paper paper, String userId);
+
+	List<Paper> searchMentorStudentsPapersByKeyword(String keyword, String mentorId);
+
+	List<Paper> searchMentorStudentsPapersByStudentName(String studentName, String mentorId);
 }

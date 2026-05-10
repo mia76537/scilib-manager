@@ -99,6 +99,25 @@ public class PaperServiceImpl implements PaperService {
 	}
 
 	@Override
+	public List<Paper> listMentorStudentsPapers(String mentorId) {
+		// 逻辑：在 paperRepository 中查询所有 owner 的 mentorId 等于当前导师 ID 的文献
+		// 这通常需要你在 PaperRepository 中定义对应的方法
+		return paperRepository.findByOwner_MentorId(mentorId);
+	}
+
+	@Override
+	public List<Paper> searchMentorStudentsPapersByKeyword(String keyword, String mentorId) {
+		// 按关键词搜索名下学生的文献
+		return paperRepository.searchMentorStudentsPapersByKeyword(keyword, mentorId);
+	}
+
+	@Override
+	public List<Paper> searchMentorStudentsPapersByStudentName(String studentName, String mentorId) {
+		// 按学生姓名搜索名下学生的文献
+		return paperRepository.findByOwner_UserNameContainingAndOwner_MentorId(studentName, mentorId);
+	}
+
+	@Override
 	@Transactional
 	public Paper updatePaperMetadata(Paper updateData, String userId) {
 		Paper existingPaper = paperRepository.findByIdAndOwner_UserId(updateData.getId(), userId)

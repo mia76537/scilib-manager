@@ -86,4 +86,41 @@ public class PaperController {
 		return Result.success(paperService.listPapersByUserForAdmin(targetUserId));
 	}
 
+	/**
+	 * 导师查看自己名下所有学生的文献列表
+	 */
+	@GetMapping("/mentor/students-papers")
+	public Result<List<Paper>> getMentorStudentsPapers(@RequestAttribute("userId") String mentorId,
+			@RequestAttribute("role") String role) {
+		if (!"MENTOR".equals(role) && !"ADMIN".equals(role)) {
+			return Result.error(403, "权限不足，仅导师可见");
+		}
+		System.out.println("开始查看学生文献了");
+		return Result.success(paperService.listMentorStudentsPapers(mentorId));
+	}
+
+	/**
+	 * 导师按关键词搜索名下学生的文献
+	 */
+	@GetMapping("/mentor/search/keyword")
+	public Result<List<Paper>> searchStudentsPapersByKeyword(@RequestParam String keyword,
+			@RequestAttribute("userId") String mentorId, @RequestAttribute("role") String role) {
+		if (!"MENTOR".equals(role)) {
+			return Result.error(403, "权限不足");
+		}
+		return Result.success(paperService.searchMentorStudentsPapersByKeyword(keyword, mentorId));
+	}
+
+	/**
+	 * 导师按学生姓名搜索名下学生的文献
+	 */
+	@GetMapping("/mentor/search/student")
+	public Result<List<Paper>> searchStudentsPapersByStudentName(@RequestParam String studentName,
+			@RequestAttribute("userId") String mentorId, @RequestAttribute("role") String role) {
+		if (!"MENTOR".equals(role)) {
+			return Result.error(403, "权限不足");
+		}
+		return Result.success(paperService.searchMentorStudentsPapersByStudentName(studentName, mentorId));
+	}
+
 }

@@ -29,4 +29,14 @@ public interface PaperRepository extends JpaRepository<Paper, Long> {
 
 	// 检查文件路径是否冲突
 	boolean existsByLocalPath(String localPath);
+
+	List<Paper> findByOwner_MentorId(String mentorId);
+
+	List<Paper> findByOwner_UserNameContainingAndOwner_MentorId(String studentName, String mentorId);
+
+	// 搜索：按文献关键词查询，且限定在导师名下
+	@Query("SELECT p FROM Paper p WHERE (p.paperName LIKE %:keyword% OR p.keyWords LIKE %:keyword%) "
+			+ "AND p.owner.mentorId = :mentorId")
+	List<Paper> searchMentorStudentsPapersByKeyword(@Param("keyword") String keyword,
+			@Param("mentorId") String mentorId);
 }
