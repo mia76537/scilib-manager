@@ -3,6 +3,7 @@ package com.scimanager.core.service.serviceImpl;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -51,6 +52,38 @@ public class PaperServiceImpl implements PaperService {
 		citationInternalService.processMetadataAsync(savedPaper.getId(), absolutePath, paperRepository, userId);
 
 		return savedPaper;
+	}
+
+	@Override
+	public Resource downloadPaper(Long paperId, String currentUserId) {
+		// 1. 获取论文信息和所有者信息
+		Paper paper = paperRepository.findById(paperId).orElseThrow(() -> new RuntimeException("文件不存在"));
+		User owner = paper.getOwner();
+		// 2. 获取当前操作者信息以判断角色
+		User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new RuntimeException("当前用户不存在"));
+
+		boolean canDownload = false;
+		// 3. 权限层级判定
+		if ("ADMIN".equals(currentUser.getRole())) {
+			canDownload = true;
+		} else if ("MENTOR".equals(currentUser.getRole())) {
+			// 如果是导师，判断是否是自己的文件，或者是自己名下学生的文件
+			if (owner.getUserId().equals(currentUserId) || currentUserId.equals(owner.getMentorId())) {
+				canDownload = true;
+			}
+		} else {
+			// 普通学生，只能下载自己的
+			if (owner.getUserId().equals(currentUserId)) {
+				canDownload = true;
+			}
+		}
+
+		if (!canDownload) {
+			throw new RuntimeException("权限不足，无法下载此文件");
+		}
+
+		// 4. 调用存储服务获取资源
+		return storageService.loadAsResource(paper.getLocalPath());
 	}
 
 	@Override

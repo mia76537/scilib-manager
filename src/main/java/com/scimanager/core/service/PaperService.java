@@ -2,6 +2,7 @@ package com.scimanager.core.service;
 
 import java.util.List;
 
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.scimanager.core.model.Paper;
@@ -72,4 +73,6 @@ public interface PaperService {
 	List<Paper> searchMentorStudentsPapersByKeyword(String keyword, String mentorId);
 
 	List<Paper> searchMentorStudentsPapersByStudentName(String studentName, String mentorId);
+
+	Resource downloadPaper(Long paperId, String currentUserId);
 }

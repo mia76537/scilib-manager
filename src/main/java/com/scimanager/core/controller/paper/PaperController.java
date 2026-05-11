@@ -3,6 +3,10 @@ package com.scimanager.core.controller.paper;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +37,16 @@ public class PaperController {
 		Paper paper = paperService.uploadPaper(file, userId);
 		// 使用 Result.success 包装结果
 		return Result.success(paper);
+	}
+
+	@GetMapping("/{paperId}/download")
+	public ResponseEntity<Resource> downloadFile(@PathVariable Long paperId, @RequestParam String userId) {
+		Resource resource = paperService.downloadPaper(paperId, userId);
+		// 获取原始文件名，防止下载后文件名是 UUID
+		String fileName = resource.getFilename();
+		// 建议从数据库查询 Paper 对象获取原始文件名 paperName
+		return ResponseEntity.ok().contentType(MediaType.parseMediaType("application/octet-stream"))
+				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"").body(resource);
 	}
 
 	// 删除文件
