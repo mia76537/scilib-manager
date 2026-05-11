@@ -43,7 +43,7 @@ public class PaperController {
 		return Result.success("删除成功");
 	}
 
-	// 按关键词搜索
+	// 按关键词搜索（根据response，只要关键词缺省就能进行全量搜索）
 	@GetMapping("/search")
 	public Result<List<Paper>> search(@RequestParam String keyword, @RequestAttribute("userId") String userId) {
 		List<Paper> papers = paperService.searchByKeyword(keyword, userId);
