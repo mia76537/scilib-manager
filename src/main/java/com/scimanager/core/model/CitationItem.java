@@ -1,9 +1,13 @@
 package com.scimanager.core.model;
 
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import lombok.Data;
 
 /**
@@ -22,4 +26,7 @@ public class CitationItem {
 	private String doi;// DOI号
 	private String accessionNumber;// 入藏号
 	private String remark;// 备注
+
+	@OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+	private List<CitationResult> results;
 }

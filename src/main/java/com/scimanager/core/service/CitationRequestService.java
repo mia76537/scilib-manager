@@ -3,6 +3,7 @@ package com.scimanager.core.service;
 import java.util.List;
 
 import com.scimanager.core.model.CitationRequest;
+import com.scimanager.core.model.dto.citationrequesdto.CitationResultSubmitDTO;
 import com.scimanager.core.model.dto.citationrequesdto.CreateCitationRequestDTO;
 
 public interface CitationRequestService {
@@ -11,6 +12,9 @@ public interface CitationRequestService {
 
 	// 更新请求状态
 	void updateRequestStatus(String serialNumber, CitationRequest.RequestStatus status, String userId);
+
+	// 填入结果
+	void submitResults(CitationResultSubmitDTO submitDTO);
 
 	// 删除请求
 	void deleteRequest(String serialNumber, String userId);

@@ -10,11 +10,13 @@ import org.mapstruct.Mapping;
 import com.scimanager.core.model.CitationCriteria;
 import com.scimanager.core.model.CitationItem;
 import com.scimanager.core.model.CitationRequest;
+import com.scimanager.core.model.CitationResult;
 import com.scimanager.core.model.User;
 import com.scimanager.core.model.dto.citationrequesdto.CitationCriteriaDTO;
 import com.scimanager.core.model.dto.citationrequesdto.CitationItemDTO;
 import com.scimanager.core.model.dto.citationrequesdto.CitationRequestDetailDTO;
 import com.scimanager.core.model.dto.citationrequesdto.CitationRequestSummaryDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationResultSubmitDTO;
 import com.scimanager.core.model.dto.citationrequesdto.CreateCitationRequestDTO;
 
 @Mapper(componentModel = "spring")
@@ -50,4 +52,17 @@ public interface CitationMapper {
 
 	// 将前端传入的“论文条目”列表批量转换为实体列表。
 	List<CitationItem> toItemEntityList(List<CitationItemDTO> dtos);
+
+	// 将 ItemResultEntry 转换为 CitationResult 实体
+	@Mapping(target = "id", ignore = true)
+	// 注意：如果需要根据 itemId 自动加载 CitationItem 实体，通常在 Service 层处理更简单
+	// 但如果只是为了结构映射，可以暂时忽略 item 对象的填充
+	@Mapping(target = "item", ignore = true)
+	@Mapping(target = "criteriaKey", source = "criteriaKey")
+	@Mapping(target = "value", source = "value")
+	@Mapping(target = "specificAccessionNumber", source = "specificAccessionNumber")
+	CitationResult toResultEntity(CitationResultSubmitDTO.ItemResultEntry dto);
+
+	// 批量转换方法
+	List<CitationResult> toResultEntityList(List<CitationResultSubmitDTO.ItemResultEntry> entries);
 }

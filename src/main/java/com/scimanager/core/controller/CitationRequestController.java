@@ -17,6 +17,7 @@ import com.scimanager.core.common.Result;
 import com.scimanager.core.model.CitationRequest;
 import com.scimanager.core.model.dto.citationrequesdto.CitationRequestDetailDTO;
 import com.scimanager.core.model.dto.citationrequesdto.CitationRequestSummaryDTO;
+import com.scimanager.core.model.dto.citationrequesdto.CitationResultSubmitDTO;
 import com.scimanager.core.model.dto.citationrequesdto.CreateCitationRequestDTO;
 import com.scimanager.core.service.CitationRequestService;
 import com.scimanager.core.service.mapper.CitationMapper;
@@ -75,6 +76,21 @@ public class CitationRequestController {
 	}
 
 	/**
+	 * 提交检索结果：管理员根据流水号为申请单中的论文填入具体数值
+	 */
+	@PostMapping("/serial/{serialNumber}/results")
+	public Result<Void> submitResults(@PathVariable String serialNumber, @RequestBody CitationResultSubmitDTO submitDTO,
+			@RequestAttribute("userId") String userId) {
+		// 简单的安全性校验：确保路径中的流水号与 DTO 中的一致
+		if (!serialNumber.equals(submitDTO.getSerialNumber())) {
+			throw new RuntimeException("提交的数据流水号不匹配");
+		}
+		// 调用服务层执行保存逻辑
+		citationRequestService.submitResults(submitDTO);
+		return Result.success(null);
+	}
+
+	/**
 	 * 动态条件搜索 展示简介内容，返回 SummaryDTO
 	 */
 	// 获取列表：服务层通过 userId 判断是返回该用户个人列表还是管理员全量列表
@@ -83,7 +99,6 @@ public class CitationRequestController {
 			@RequestParam(required = false) CitationRequest.RequestStatus status,
 			@RequestParam(required = false) String serialNumber, @RequestParam(required = false) String requesterId,
 			@RequestAttribute("userId") String userId) {
-
 		List<CitationRequest> entities = citationRequestService.findRequestsByCondition(status, serialNumber,
 				requesterId, userId);
 		return Result.success(citationMapper.toSummaryDTOList(entities));

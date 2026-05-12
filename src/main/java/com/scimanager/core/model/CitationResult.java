@@ -22,13 +22,10 @@ public class CitationResult {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "item_id")
 	private CitationItem item;
-
-	// 关键：标识这是哪个指标（存字符串，如 "wosCits", "scieCits"）
+	// 标识这是哪个指标（存字符串，如 "wosCits", "scieCits"）
 	private String criteriaKey;
-
 	// 结果数值
 	private Integer value;
-
 	// 可选：该指标下的入藏号（如果每种检索都有独立编号）
 	private String specificAccessionNumber;
 }

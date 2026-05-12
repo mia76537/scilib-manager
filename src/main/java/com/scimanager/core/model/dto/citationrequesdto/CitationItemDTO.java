@@ -1,5 +1,7 @@
 package com.scimanager.core.model.dto.citationrequesdto;
 
+import java.util.List;
+
 import lombok.Data;
 
 /**
@@ -15,4 +17,5 @@ public class CitationItemDTO {
 	private String doi;// DOI号
 	private String accessionNumber;// 入藏号
 	private String remark;// 备注
+	private List<CitationResultDTO> results;
 }
