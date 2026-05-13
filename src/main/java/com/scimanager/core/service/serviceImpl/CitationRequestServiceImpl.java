@@ -110,8 +110,11 @@ public class CitationRequestServiceImpl implements CitationRequestService {
 
 	@Override
 	@Transactional // 确保添加了事务支持
-	public void submitResults(CitationResultSubmitDTO submitDTO) {
-
+	public void submitResults(CitationResultSubmitDTO submitDTO, String userId) {
+		// 显式校验管理员权限
+		if (!isAdmin(userId)) {
+			throw new RuntimeException("权限不足，仅管理员可提交检索结果");
+		}
 		List<CitationResult> results = citationMapper.toResultEntityList(submitDTO.getResults());
 		for (int i = 0; i < results.size(); i++) {
 			Long itemId = submitDTO.getResults().get(i).getItemId();

@@ -81,12 +81,12 @@ public class CitationRequestController {
 	@PostMapping("/serial/{serialNumber}/results")
 	public Result<Void> submitResults(@PathVariable String serialNumber, @RequestBody CitationResultSubmitDTO submitDTO,
 			@RequestAttribute("userId") String userId) {
-		// 简单的安全性校验：确保路径中的流水号与 DTO 中的一致
 		if (!serialNumber.equals(submitDTO.getSerialNumber())) {
 			throw new RuntimeException("提交的数据流水号不匹配");
 		}
-		// 调用服务层执行保存逻辑
-		citationRequestService.submitResults(submitDTO);
+
+		// 传递 userId 以便 Service 进行权限检查
+		citationRequestService.submitResults(submitDTO, userId);
 		return Result.success(null);
 	}
 

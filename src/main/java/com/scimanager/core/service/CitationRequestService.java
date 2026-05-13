@@ -14,7 +14,7 @@ public interface CitationRequestService {
 	void updateRequestStatus(String serialNumber, CitationRequest.RequestStatus status, String userId);
 
 	// 填入结果
-	void submitResults(CitationResultSubmitDTO submitDTO);
+	void submitResults(CitationResultSubmitDTO submitDTO, String userId);
 
 	// 删除请求
 	void deleteRequest(String serialNumber, String userId);
@@ -25,4 +25,5 @@ public interface CitationRequestService {
 	// 综合条件查询
 	List<CitationRequest> findRequestsByCondition(CitationRequest.RequestStatus status, String serialNumber,
 			String requesterId, String userId);
+
 }
