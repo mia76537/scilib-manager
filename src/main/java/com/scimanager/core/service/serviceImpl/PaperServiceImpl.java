@@ -1,5 +1,6 @@
 package com.scimanager.core.service.serviceImpl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -37,18 +38,19 @@ public class PaperServiceImpl implements PaperService {
 	@Override
 	@Transactional
 	public Paper uploadPaper(MultipartFile file, String userId) {
-		// 1. 获取用户信息
+		// 获取用户信息
 		User owner = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));
-		// 2. 物理保存文件
+		// 物理保存文件
 		String storedPath = storageService.upload(file);
-		// 3. 创建数据库记录
+		// 创建数据库记录
 		Paper paper = new Paper();
 		paper.setPaperName(file.getOriginalFilename());
 		paper.setLocalPath(storedPath);
 		paper.setOwner(owner);
 		Paper savedPaper = paperRepository.save(paper);
-		// 调用外部 Service 的异步方法
+		// 调用外部 Service 的异步方法 ，存储文献
 		String absolutePath = storageService.getAbsolutePath(savedPaper.getLocalPath());
+		// 调用外部 Service 的异步方法 ，填充文献数据
 		citationInternalService.processMetadataAsync(savedPaper.getId(), absolutePath, paperRepository, userId);
 
 		return savedPaper;
@@ -151,19 +153,45 @@ public class PaperServiceImpl implements PaperService {
 	}
 
 	@Override
-	@Transactional
+	@Transactional // 手动更新论文元数据
 	public Paper updatePaperMetadata(Paper updateData, String userId) {
+		// 获取现有数据
 		Paper existingPaper = paperRepository.findByIdAndOwner_UserId(updateData.getId(), userId)
 				.orElseThrow(() -> new RuntimeException("文件不存在或无权操作"));
-
+		// 记录旧的关键词（注意：List 是引用类型，建议创建一个副本进行对比）
+		List<String> oldKeywords = existingPaper.getKeyWords() != null ? new ArrayList<>(existingPaper.getKeyWords())
+				: new ArrayList<>();
+		// 更新所有字段
 		existingPaper.setPaperName(updateData.getPaperName());
-		existingPaper.setKeyWords(updateData.getKeyWords());
-
-		// 如果前端也手动修改了引文，也可以在这里更新
+		existingPaper.setKeyWords(updateData.getKeyWords()); // 这里的更新是触发 AI 的关键点
+		existingPaper.setPaperTitle(updateData.getPaperTitle());
+		existingPaper.setPaperAuthors(updateData.getPaperAuthors());
+		existingPaper.setPaperSourcePublications(updateData.getPaperSourcePublications());
+		existingPaper.setPaperPublicationYear(updateData.getPaperPublicationYear());
+		existingPaper.setPaperDoi(updateData.getPaperDoi());
+		existingPaper.setPaperAccessionNumber(updateData.getPaperAccessionNumber());
 		if (updateData.getPaperCitation() != null) {
 			existingPaper.setPaperCitation(updateData.getPaperCitation());
 		}
-
-		return paperRepository.save(existingPaper);
+		// 保存到数据库
+		Paper savedPaper = paperRepository.save(existingPaper);
+		// 判断关键词是否真的发生了变化
+		List<String> newKeywords = savedPaper.getKeyWords() != null ? savedPaper.getKeyWords() : new ArrayList<>();
+		boolean keywordsChanged = !oldKeywords.equals(newKeywords);
+		// 只有当关键词改变，且事务提交成功后，才联络 AI
+		if (keywordsChanged) {
+			if (TransactionSynchronizationManager.isActualTransactionActive()) {
+				TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+					@Override
+					public void afterCommit() {
+						// 此时数据库事务已提交，关键词已更新，通知 AI
+						userInterestsService.makeUserInterestProfile(userId);
+					}
+				});
+			} else {
+				userInterestsService.makeUserInterestProfile(userId);
+			}
+		}
+		return savedPaper;
 	}
 }

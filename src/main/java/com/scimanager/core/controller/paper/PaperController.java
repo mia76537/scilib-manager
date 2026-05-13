@@ -69,7 +69,10 @@ public class PaperController {
 	@PutMapping("/{id}/metadata")
 	public Result<Paper> updateMetadata(@PathVariable Long id, @RequestBody Paper updateData,
 			@RequestAttribute("userId") String userId) {
+
+		// 强制设置 ID，防止前端传错
 		updateData.setId(id);
+		// 调用优化的 Service 逻辑
 		Paper updatedPaper = paperService.updatePaperMetadata(updateData, userId);
 		return Result.success(updatedPaper);
 	}
