@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PreUpdate;
 import lombok.Data;
 
 /**
@@ -58,6 +59,11 @@ public class CitationRequest {
 	public enum RequestStatus {
 		// 待处理、处理中、已完成
 		PENDING, PROCESSING, COMPLETED
+	}
+
+	@PreUpdate
+	public void onPreUpdate() {
+		this.updateTime = LocalDateTime.now(); // 仅在更新操作时触发,修改更新时间
 	}
 
 }

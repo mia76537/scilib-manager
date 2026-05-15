@@ -109,21 +109,31 @@ public class CitationRequestServiceImpl implements CitationRequestService {
 	}
 
 	@Override
-	@Transactional // 确保添加了事务支持
+	@Transactional // 提交结果
 	public void submitResults(CitationResultSubmitDTO submitDTO, String userId) {
 		// 显式校验管理员权限
 		if (!isAdmin(userId)) {
 			throw new RuntimeException("权限不足，仅管理员可提交检索结果");
 		}
 		List<CitationResult> results = citationMapper.toResultEntityList(submitDTO.getResults());
+		// 这些结果属于同一个 Request，需要拿到这个 Request 引用
+		CitationRequest parentRequest = null;
+
 		for (int i = 0; i < results.size(); i++) {
 			Long itemId = submitDTO.getResults().get(i).getItemId();
-			// 使用 entityManager 建立关联
-			CitationItem item = entityManager.getReference(CitationItem.class, itemId);
+			// 建议直接 find 实体，以便获取关联的 Request
+			CitationItem item = entityManager.find(CitationItem.class, itemId);
 			results.get(i).setItem(item);
+
+			if (parentRequest == null && item != null) {
+				parentRequest = item.getRequest();
+			}
 		}
-		// 使用专门的 resultRepository 进行保存
-		resultRepository.saveAll(results);
+		// 更新主表时间
+		if (parentRequest != null) {
+			parentRequest.setUpdateTime(LocalDateTime.now());
+			requestRepository.save(parentRequest);
+		}
 	}
 
 	private String generateSerialNumber() {
