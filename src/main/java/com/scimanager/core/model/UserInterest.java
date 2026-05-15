@@ -16,7 +16,7 @@ public class UserInterest {
 	private String userId; // 与 User 一对一
 
 	@Column(columnDefinition = "TEXT")
-	private String analysisResult; // 存储 AI 返回的表格或 JSON 字符串
+	private String analysisResult; // 存储 AI 返回 JSON 字符串
 
 	private LocalDateTime lastUpdateTime; // 记录上次分析时间
 	private Integer paperCountSnapshot; // 记录分析时的论文总数
