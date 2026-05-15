@@ -16,12 +16,12 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtils {
 
-	// 密钥（实际开发从配置文件读取）。注意：HS256 算法要求密钥长度至少 256 位
+	// 密钥（ HS256 算法要求密钥长度至少 256 位
 	private static final String SECRET_STR = "your_super_secret_key_for_scimanager_system_2024";
 	private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STR.getBytes());
 
-	// 过期时间： 30 分钟 (毫秒计算)
-	private static final long EXPIRATION_TIME = 30 * 60 * 1000;
+	// 过期时间： 120 分钟 (毫秒计算)
+	private static final long EXPIRATION_TIME = 120 * 60 * 1000;
 
 	/**
 	 * 生成 Token
