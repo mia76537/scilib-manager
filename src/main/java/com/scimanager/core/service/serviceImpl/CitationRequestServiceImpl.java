@@ -111,27 +111,52 @@ public class CitationRequestServiceImpl implements CitationRequestService {
 	@Override
 	@Transactional // 提交结果
 	public void submitResults(CitationResultSubmitDTO submitDTO, String userId) {
-		// 显式校验管理员权限
+		// 1. 权限校验
 		if (!isAdmin(userId)) {
 			throw new RuntimeException("权限不足，仅管理员可提交检索结果");
 		}
-		List<CitationResult> results = citationMapper.toResultEntityList(submitDTO.getResults());
-		// 这些结果属于同一个 Request，需要拿到这个 Request 引用
+
+		// 2. 转换新结果
+		List<CitationResult> newResults = citationMapper.toResultEntityList(submitDTO.getResults());
+
+		// 3. 处理覆盖逻辑
+		// 收集本次提交涉及的所有 itemId
+		List<Long> itemIds = submitDTO.getResults().stream().map(CitationResultSubmitDTO.ItemResultEntry::getItemId)
+				.distinct().toList();
+
+		// 【关键步骤】：删除这些 item 之前旧的检索结果，防止重复
+		if (!itemIds.isEmpty()) {
+			resultRepository.deleteByItemIdIn(itemIds);
+			// 注意：你需要在 CitationResultRepository 中定义这个方法
+		}
+
 		CitationRequest parentRequest = null;
 
-		for (int i = 0; i < results.size(); i++) {
+		// 4. 重新建立关联并保存
+		for (int i = 0; i < newResults.size(); i++) {
 			Long itemId = submitDTO.getResults().get(i).getItemId();
-			// 建议直接 find 实体，以便获取关联的 Request
 			CitationItem item = entityManager.find(CitationItem.class, itemId);
-			results.get(i).setItem(item);
 
-			if (parentRequest == null && item != null) {
-				parentRequest = item.getRequest();
+			if (item != null) {
+				newResults.get(i).setItem(item);
+				// 如果 parentRequest 为空，则从第一个合法的 item 中获取
+				if (parentRequest == null) {
+					// 注意：由于 CitationItem.java 中 request 字段设置了 insertable = false,
+					// 请确保此时 item.getRequest() 能拿到值。
+					// 如果拿不到，建议通过 submitDTO.getSerialNumber() 去查询 request 对象
+					parentRequest = requestRepository.findBySerialNumber(submitDTO.getSerialNumber()).orElse(null);
+				}
 			}
 		}
-		// 更新主表时间
+
+		// 保存新结果
+		resultRepository.saveAll(newResults);
+
+		// 5. 更新主表状态和时间
 		if (parentRequest != null) {
 			parentRequest.setUpdateTime(LocalDateTime.now());
+			// 建议：提交结果后，自动将状态改为“已完成”
+			parentRequest.setStatus(CitationRequest.RequestStatus.COMPLETED);
 			requestRepository.save(parentRequest);
 		}
 	}
