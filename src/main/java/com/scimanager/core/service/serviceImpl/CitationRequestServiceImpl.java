@@ -155,13 +155,14 @@ public class CitationRequestServiceImpl implements CitationRequestService {
 		// 5. 更新主表状态和时间
 		if (parentRequest != null) {
 			parentRequest.setUpdateTime(LocalDateTime.now());
-			// 建议：提交结果后，自动将状态改为“已完成”
-			parentRequest.setStatus(CitationRequest.RequestStatus.COMPLETED);
+			// 可行的建议：提交结果后，自动将状态改为“已完成”
+			// parentRequest.setStatus(CitationRequest.RequestStatus.COMPLETED);
 			requestRepository.save(parentRequest);
 		}
 	}
 
 	private String generateSerialNumber() {
+		// UUID重命名
 		return UUID.randomUUID().toString().replace("-", "");
 	}
 }
