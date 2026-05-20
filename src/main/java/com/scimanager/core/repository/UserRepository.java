@@ -5,18 +5,33 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.scimanager.core.model.User;
+import com.scimanager.core.entity.User;
 
 /**
- * 通过 Repository 查询匹配的用户
+ * 用户数据访问层
+ *
+ * <p>提供 User 实体的基本 CRUD 操作及自定义查询。<br>
+ * <b>注意：</b>findByUserIdAndPassword 当前为明文密码比对，预留 BCrypt 迁移。</p>
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
-	// JPA 会自动根据方法名生成 SQL：select * from users where userId = ? and userPwd = ?
+
+	/**
+	 * 根据 userId 和 password 查找用户（登录验证）
+	 * JPA 自动生成：select * from users where userId = ? and password = ?
+	 */
 	User findByUserIdAndPassword(String userId, String password);
 
-	// 新增：仅根据 ID 查找，用于区分错误类型
+	/**
+	 * 仅根据 userId 查找用户（用于区分"用户不存在"和"密码错误"）
+	 */
 	User findByUserId(String userId);
 
-	List<User> findByMentorId(String operatorId);
+	/**
+	 * 查询指定导师名下的所有学生
+	 *
+	 * @param mentorId 导师的用户 ID
+	 * @return 学生列表
+	 */
+	List<User> findByMentorId(String mentorId);
 }
