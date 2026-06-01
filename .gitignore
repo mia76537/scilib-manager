@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+.metadata/
+.metadata_123/
+
 ### Spring Boot Config ###
 # 忽略所有环境特定的配置文件
 application-*.properties
@@ -33,6 +36,17 @@ application-*.yml
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+# Eclipse metadata
+.metadata/
+.args
+.classpath
+.project
+.settings/
+.factorypath
+
+# VS Code metadata
+.vscode/
 
 ### VS Code ###
 .vscode/
